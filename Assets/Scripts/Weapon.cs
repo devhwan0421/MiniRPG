@@ -1,4 +1,4 @@
-using UnityEngine;
+/*using UnityEngine;
 
 public class Weapon : MonoBehaviour
 {
@@ -66,3 +66,4 @@ public class Weapon : MonoBehaviour
         client.SendHitReq(objType, objId, objDir, damage); //몬스터 데미지 받았음을 모두에게 브로드캐스트
     }
 }
+*/

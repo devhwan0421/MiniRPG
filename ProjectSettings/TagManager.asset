@@ -3,7 +3,10 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 3
-  tags: []
+  tags:
+  - MyPlayer
+  - Monster
+  - Npc
   layers:
   - Default
   - TransparentFX
@@ -29,12 +32,12 @@ TagManager:
   - Object
   - Ladder
   - 
+  - Portal
   - 
+  - Item
+  - Interation
   - 
-  - 
-  - 
-  - 
-  - 
+  - Npc
   - 
   - 
   m_SortingLayers:

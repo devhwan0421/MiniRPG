@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -432,4 +432,4 @@ public class MiniClient : MonoBehaviour
         public float knockY;
         public float invSec;    // 무적시간
     }
-}
+}*/

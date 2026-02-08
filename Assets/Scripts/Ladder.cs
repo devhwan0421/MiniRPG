@@ -1,4 +1,4 @@
-using UnityEngine;
+/*using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class Ladder :MonoBehaviour
@@ -32,8 +32,8 @@ public class Ladder :MonoBehaviour
             //Debug.Log("사다리 들어옴");
             player.canClimb = true;
 
-            /*Vector3Int cellPos = tilemap.WorldToCell(other.bounds.center);
-            Vector3 worldPos = tilemap.GetCellCenterWorld(cellPos);*/
+            *//*Vector3Int cellPos = tilemap.WorldToCell(other.bounds.center);
+            Vector3 worldPos = tilemap.GetCellCenterWorld(cellPos);*//*
         }
         
     }
@@ -52,3 +52,4 @@ public class Ladder :MonoBehaviour
         }
     }
 }
+*/
