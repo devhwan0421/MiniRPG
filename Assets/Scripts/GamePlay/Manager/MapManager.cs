@@ -186,6 +186,16 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    public void UpdatePlayerMoveList(PlayerMoveListResponse res)
+    {
+        if (res.Players == null) return;
+
+        foreach (var player in res.Players)
+        {
+            UpdatePlayerMove(player);
+        }
+    }
+
     public void DespawnPlayer(int characterId)
     {
         if (_players.TryGetValue(characterId, out var playerObj))

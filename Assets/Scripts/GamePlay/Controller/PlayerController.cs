@@ -32,6 +32,8 @@ public class PlayerController : MonoBehaviour
 
     private Vector3 _lastSentPos; //마지막으로 서버에 보낸 위치
     private int _lastState;
+    private float _lastSendTime;
+    private const float SEND_INTERVAL = 0.1f;
 
     private float _attackTimer;
     private bool _isAttacking = false;
@@ -116,12 +118,13 @@ public class PlayerController : MonoBehaviour
             }
         }
         float distance = Vector3.Distance(_lastSentPos, transform.position);
-        if (distance > 0.1f || state != _lastState)
+        if (state != _lastState || (distance > 0.1f && Time.time - _lastSendTime > SEND_INTERVAL))
         {
             var moveBuff = PacketMaker.Instance.Move(transform.position.x, transform.position.y, transform.position.z, dir, state);
             Managers.Network.SendPacket(moveBuff);
             _lastSentPos = transform.position;
             _lastState = state;
+            _lastSendTime = Time.time;
         }
     }
 

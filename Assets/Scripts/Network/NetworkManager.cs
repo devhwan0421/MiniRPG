@@ -25,7 +25,8 @@ public class NetworkManager : MonoBehaviour
     private ConcurrentQueue<ArraySegment<byte>> _sendQ = new ConcurrentQueue<ArraySegment<byte>>();
     private readonly SemaphoreSlim _signal = new SemaphoreSlim(0);
 
-    private readonly byte[] _recvBuffer = new byte[65536];
+    //private readonly byte[] _recvBuffer = new byte[65536];
+    private readonly byte[] _recvBuffer = new byte[128 * 1024];
 
     private readonly ConcurrentQueue<Action> _mainQ = new();       // 메인 스레드에서 실행할 작업 큐
 

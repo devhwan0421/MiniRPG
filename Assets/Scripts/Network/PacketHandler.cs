@@ -50,6 +50,8 @@ public class PacketHandler
 
         _handlers.Add(PacketID.PlayerLevelUpResponse, (json) => HandlePlayerLevelUp(JsonSerializer.Deserialize<PlayerLevelUpResponse>(json)));
         _handlers.Add(PacketID.QuestCompleteResponse, (json) => HandleQuestComplete(JsonSerializer.Deserialize<QuestCompleteResponse>(json)));
+        _handlers.Add(PacketID.PlayerMoveListResponse, (json) => HandlePlayerMoveList(JsonSerializer.Deserialize<PlayerMoveListResponse>(json)));
+
 
         _handlers.Add(PacketID.ServerMessageResponse, (json) => HandleServerMessage(JsonSerializer.Deserialize<ServerMessageResponse>(json).Message));
     }
@@ -198,6 +200,11 @@ public class PacketHandler
     public void HandleQuestComplete(QuestCompleteResponse res)
     {
         //Managers.Ui._dialogueUi.OnDialogueSelection(res);
+    }
+
+    public void HandlePlayerMoveList(PlayerMoveListResponse res)
+    {
+        Managers.Map.UpdatePlayerMoveList(res);
     }
 
     public void HandleServerMessage(string msg)

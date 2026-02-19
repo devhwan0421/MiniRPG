@@ -6,7 +6,8 @@ using System.Threading;
 public static class PacketSerializer
 {
     //스레드별 개별 작업대 (Lock 최소화)
-    public static ThreadLocal<byte[]> SendBuffer = new ThreadLocal<byte[]>(() => new byte[65536]);
+    //public static ThreadLocal<byte[]> SendBuffer = new ThreadLocal<byte[]>(() => new byte[65536]);
+    public static ThreadLocal<byte[]> SendBuffer = new ThreadLocal<byte[]>(() => new byte[128 * 1024]);
 
     public static ArraySegment<byte> Serialize(ushort id, string json)
     {

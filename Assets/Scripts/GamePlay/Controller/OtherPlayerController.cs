@@ -24,6 +24,10 @@ public class OtherPlayerController : MonoBehaviour
     public int dir = 0;
     public int state = 0;
 
+    private Vector3 _lastTargetPos;
+    private Vector3 _velocity;
+    private float _packetInterval = 0.1f; // 서버 전송 주기
+
     //float currentHp;
 
     /*public float moveSpeed = 5f;
@@ -53,7 +57,52 @@ public class OtherPlayerController : MonoBehaviour
         _targetPos = transform.position;
     }
 
+    private void FixedUpdate()
+    {
+        if (state == 9) return;
+
+        if (state == 1)
+        {
+            float moveSpeed = _velocity.magnitude;
+            Vector3 nextPos = Vector3.MoveTowards(_rb.position, _targetPos, moveSpeed * Time.fixedDeltaTime);
+            _rb.MovePosition(nextPos);
+
+            _targetPos += _velocity * Time.fixedDeltaTime;
+        }
+        else
+        {
+            _rb.MovePosition(Vector3.Lerp(_rb.position, _lastTargetPos, 15f * Time.fixedDeltaTime));
+        }
+    }
+
     private void Update()
+    {
+        if (state == 9)
+        {
+            _spum.PlayAnimation(PlayerState.DEATH, _indexPair[PlayerState.DEATH]);
+            return;
+        }
+
+        //hp ui 업데이트 -> 시스템ui에서 자동관리함
+        //SystemUi.Instance.SetHp(Managers.Object.MyPlayer.Hp);
+
+        /*float distance = Vector3.Distance(transform.position, _targetPos);
+        if (distance > 0.01f)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, _targetPos, (distance / 0.08f) * Time.deltaTime);
+        }*/
+
+        var s = spum.transform.localScale;
+        s.x = Mathf.Abs(s.x) * (dir < 0 ? 1 : -1);
+        spum.transform.localScale = s;
+
+        if (_lastState != state)
+        {
+            UpdateAnimationState();
+            _lastState = state;
+        }
+    }
+    /*private void Update()
     {
         if (state == 9)
         {
@@ -75,7 +124,7 @@ public class OtherPlayerController : MonoBehaviour
             UpdateAnimationState();
             _lastState = state;
         }
-    }
+    }*/
 
     /*public enum PlayerState
     {
@@ -112,12 +161,27 @@ public class OtherPlayerController : MonoBehaviour
 
     public void OnUpdateMove(PlayerMoveResponse res)
     {
+        Vector3 newTarget = new Vector3(res.PosX, res.PosY, res.PosZ);
+
+        if (_lastTargetPos != Vector3.zero)
+        {
+            _velocity = (newTarget - _lastTargetPos) / _packetInterval;
+        }
+
+        _lastTargetPos = newTarget;
+        _targetPos = newTarget + (_velocity * _packetInterval);
+
+        dir = res.Dir;
+        state = res.State;
+    }
+    /*public void OnUpdateMove(PlayerMoveResponse res)
+    {
         if (res.State == 3)
             Debug.Log("333333333333333");
         _targetPos = new Vector3(res.PosX, res.PosY, res.PosZ);
         dir = res.Dir;
         state = res.State;
-    }
+    }*/
 
     public void OnTakeDamage(PlayerTakeDamageResponse res)
     {

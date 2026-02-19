@@ -51,6 +51,7 @@ public enum PacketID : ushort
     QuestAcceptResponse = 43,
     PlayerLevelUpResponse = 44,
     QuestCompleteResponse = 45,
+    PlayerMoveListResponse = 46,
     /*DialogueRequest = 36,
     DialogueResponse = 37,
     QuestAcceptRequest = 38,
@@ -155,6 +156,8 @@ public class PlayerInfo
     public int MaxHp { get; set; }
     public int State { get; set; }
     public int Damagae { get; set; }
+
+    public int Dir { get; set; }
 
     //public EquipmentInfo Equipment { get; set; }
 }
@@ -556,6 +559,13 @@ public class QuestCompleteResponse : IPacket
     public PacketID PacketId => PacketID.QuestCompleteResponse;
     public int QuestId;
     public string QuestName { get; set; }
+}
+
+[Serializable]
+public class PlayerMoveListResponse : IPacket
+{
+    public PacketID PacketId => PacketID.PlayerMoveListResponse;
+    public List<PlayerMoveResponse> Players { get; set; } = new List<PlayerMoveResponse>();
 }
 
 /*[Serializable]
