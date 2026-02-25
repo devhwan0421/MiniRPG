@@ -47,35 +47,7 @@
 - 서버의 응답에 따른 인벤토리 갱신, 대화 시스템 출력 등 유저 인터페이스를 관리
 
 ### 🔄 데이터 흐름도
-```mermaid
-    graph TD
-    subgraph "Network Layer"
-        Server[C# GameServer] -- "Packet" --> NM[NetworkManager]
-        NM -- "Enqueue" --> PQ[PacketQueue]
-    end
-
-    PQ -- "Pop" --> PH[PacketHandler]
-
-    subgraph "Unity Main Thread"
-        PH -- "UpdatePlayerMove / Despawn / MoveMap<br/>MonsterMove / TakeDamage / Death" --> Map[MapManager]
-        PH -- "characterListInfo Update / OnUseItem / OnDropItem / OnPickUpItem / OnPlayerLevelUp" --> Obj[ObjectManager]
-        PH -- "OnDialogueSimple / Ok / Selection / etc" --> UI[UiManager]
-        
-        PH -- "Invoke Events" --> Events[Login / CharacterList / EnterWorld / etc]
-        Obj -- "Inventory" --> Inv[MyPlayer.Inventory]
-        Obj -- "PlayerInfo" --> PC[MyPlayer.PlayerController]
-
-        Map -- "Update Transform" --> EC[Entity Controllers]
-        Inv -- "Refresh UI" --> UI
-        PC -- "Update Player State" --> UI
-    end
-
-    style PH fill:#f96,stroke:#333,stroke-width:2px
-    style NM fill:#bbf,stroke:#333
-    style Map fill:#dfd,stroke:#333
-    style Obj fill:#dfd,stroke:#333
-    style UI fill:#fdd,stroke:#333
-```
+![DataFlowDiagram](./DataFlowDiagram.png)
 
 ### 🏗️설계 핵심 원칙
 **1. 네트워크 스레드와 유니티 메인 스레드 분리**
