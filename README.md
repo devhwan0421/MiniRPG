@@ -64,6 +64,79 @@
     - **ID 기반 빠른 탐색:** `MapManager` 내부에 `Dictionary<int, GameObject>`를 구축하여 서버가 부여한 고유 ID를 Key로 관리함. 이를 통해 수신된 패킷의 대상 객체를 O(1)의 속도로 즉시 찾아내어 데이터를 업데이트 할 수 있게 함
     - **단일 진입점 확보:** `PacketHandler`는 도메인 세부 로직을 몰라도 매니저의 함수만 호출하면 되도록 설계하여 결합도를 낮추고 로직의 직관성을 높임. 모든 월드 상태 변화는 매니저를 거쳐 일괄적으로 이루어지므로 유지보수도 용이함
 
+### 📂 프로젝트 구조
+```text
+Assets/Scripts/
+├── Common/
+│   └── Packet.cs
+├── GamePlay/
+│   ├── Controller/
+│   │   ├── MonsterController.cs
+│   │   ├── OtherPlayerController.cs
+│   │   └── PlayerController.cs
+│   ├── GameData/
+│   │   ├── CharacterData.cs
+│   │   ├── ItemData.cs
+│   │   └── MonsterData.cs
+│   ├── InGame/
+│   │   ├── Inventory/
+│   │   │   └── ItemSlot.cs
+│   │   ├── EquipmentInfo.cs
+│   │   ├── FieldItem.cs
+│   │   ├── Inventory.cs
+│   │   ├── Item.cs
+│   │   ├── ItemInteraction.cs
+│   │   ├── Map.cs
+│   │   ├── Monster.cs
+│   │   ├── MonsterAttack.cs
+│   │   ├── Npc.cs
+│   │   ├── NpcInteraction.cs
+│   │   ├── Player.cs
+│   │   ├── Portal.cs
+│   │   ├── Quest.cs
+│   │   └── Skill.cs
+│   ├── Manager/
+│   │   ├── DataManager.cs
+│   │   ├── GameManager.cs
+│   │   ├── Managers.cs
+│   │   ├── MapManager.cs
+│   │   ├── ObjectManager.cs
+│   │   ├── PoolManager.cs
+│   │   ├── ResourceManager.cs
+│   │   ├── StateManager.cs
+│   │   └── UiManager.cs
+│   └── Ui/
+│       ├── Dialogue/
+│       │   ├── DialogueAcceptDeclineUi.cs
+│       │   ├── DialogueNextUi.cs
+│       │   ├── DialogueOk.cs
+│       │   ├── DialogueSelectionOptionUi.cs
+│       │   ├── DialogueSelectionUi.cs
+│       │   ├── DialogueSimpleUi.cs
+│       │   └── DialogueUi.cs
+│       ├── CharacterSelectUi.cs
+│       ├── CharacterSlot.cs
+│       ├── DamageUi.cs
+│       ├── EnterWorldUi.cs
+│       ├── InventoryUi.cs
+│       ├── LoginTabNavigation.cs
+│       ├── LoginUi.cs
+│       ├── MainCamera.cs
+│       ├── MonsterUi.cs
+│       ├── NpcUi.cs
+│       ├── PlayerUi.cs
+│       ├── SystemUi.cs
+│       ├── UI_Base.cs
+│       └── UI_EventHandler.cs
+├── Network/
+│   ├── NetworkManager.cs
+│   ├── PacketHandler.cs
+│   ├── PacketMaker.cs
+│   ├── PacketQueue.cs
+│   └── PacketSerializer.cs
+├── GroundCheck.cs
+└── Ladder.cs
+```
 ## 5. 설계 상세 및 문서
 - **[MiniRPG 문서](./MiniRPG-Doc/README.md)**
 
