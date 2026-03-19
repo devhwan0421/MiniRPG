@@ -25,7 +25,7 @@ public class UiManager : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.I))
+        if (Input.GetKeyDown(KeyCode.I) && StateManager.Instance.EnterWorld == true)
         {
             _inventoryUi.isInventoryOpen = !_inventoryUi.isInventoryOpen;
             _inventoryUi._inventoryPanel.SetActive(_inventoryUi.isInventoryOpen);

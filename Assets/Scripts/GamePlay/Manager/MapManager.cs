@@ -1,3 +1,4 @@
+using Protocol;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -173,9 +174,23 @@ public class MapManager : MonoBehaviour
         _players[playerInfo.CharacterId] = playerObj;
     }
 
-    public void UpdatePlayerMove(PlayerMoveResponse res)
+    //proto·Î ³Ñ±è
+    /*public void UpdatePlayerMove(PlayerMoveResponse res)
     {
-        Debug.Log($"posX {res.PosX}, state {res.State}");
+        //Debug.Log($"posX {res.PosX}, state {res.State}");
+        if (_players.TryGetValue(res.CharacterId, out var playerObj))
+        {
+            OtherPlayerController otherPlayerController = playerObj.GetComponent<OtherPlayerController>();
+            if (otherPlayerController != null)
+            {
+                otherPlayerController.OnUpdateMove(res);
+            }
+        }
+    }*/
+
+    public void UpdatePlayerMove(PlayerMoveResponseProto res)
+    {
+        //Debug.Log($"posX {res.PosX}, state {res.State}");
         if (_players.TryGetValue(res.CharacterId, out var playerObj))
         {
             OtherPlayerController otherPlayerController = playerObj.GetComponent<OtherPlayerController>();
@@ -186,7 +201,18 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    public void UpdatePlayerMoveList(PlayerMoveListResponse res)
+    //proto·Î ³Ñ±è
+    /*public void UpdatePlayerMoveList(PlayerMoveListResponse res)
+    {
+        if (res.Players == null) return;
+
+        foreach (var player in res.Players)
+        {
+            UpdatePlayerMove(player);
+        }
+    }*/
+
+    public void UpdatePlayerMoveList(PlayerMoveListResponseProto res)
     {
         if (res.Players == null) return;
 

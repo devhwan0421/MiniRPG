@@ -78,6 +78,9 @@ public class CharacterSelectUi : MonoBehaviour
         Managers.Pool.PreLoad(damagePrefab, 50);
 
         //씬 로딩
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Map0"); //로딩 후 Map0에 만들어진 맵객체가 생성되면 스폰 하도록
+        if(res.MapInfo.MapId == 1)
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Map0"); //로딩 후 Map0에 만들어진 맵객체가 생성되면 스폰 하도록
+        else if(res.MapInfo.MapId == 2)
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Map1");
     }
 }

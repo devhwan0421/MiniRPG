@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Protocol;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.Json;
@@ -27,7 +28,8 @@ public class PacketHandler
         _handlers.Add(PacketID.InventoryResponse, (json) => OnInventoryResponse?.Invoke(JsonSerializer.Deserialize<InventoryResponse>(json)));
 
         _handlers.Add(PacketID.SpawnPlayerResponse, (json) => HandleSpawnOnePlayer(JsonSerializer.Deserialize<SpawnPlayerResponse>(json)));
-        _handlers.Add(PacketID.PlayerMoveResponse, (json) => HandlePlayerMove(JsonSerializer.Deserialize<PlayerMoveResponse>(json)));
+        //proto로 넘김
+        //_handlers.Add(PacketID.PlayerMoveResponse, (json) => HandlePlayerMove(JsonSerializer.Deserialize<PlayerMoveResponse>(json)));
         _handlers.Add(PacketID.DespawnPlayerResponse, (json) => HandleDespawnPlayer(JsonSerializer.Deserialize<DespawnPlayerResponse>(json)));
         _handlers.Add(PacketID.MoveMapResponse, (json) => HandleMoveMap(JsonSerializer.Deserialize<MoveMapResponse>(json)));
         _handlers.Add(PacketID.UseItemResponse, (json) => HandleUseItem(JsonSerializer.Deserialize<UseItemResponse>(json)));
@@ -50,7 +52,9 @@ public class PacketHandler
 
         _handlers.Add(PacketID.PlayerLevelUpResponse, (json) => HandlePlayerLevelUp(JsonSerializer.Deserialize<PlayerLevelUpResponse>(json)));
         _handlers.Add(PacketID.QuestCompleteResponse, (json) => HandleQuestComplete(JsonSerializer.Deserialize<QuestCompleteResponse>(json)));
-        _handlers.Add(PacketID.PlayerMoveListResponse, (json) => HandlePlayerMoveList(JsonSerializer.Deserialize<PlayerMoveListResponse>(json)));
+        
+        //proto로 넘김
+        //_handlers.Add(PacketID.PlayerMoveListResponse, (json) => HandlePlayerMoveList(JsonSerializer.Deserialize<PlayerMoveListResponse>(json)));
 
 
         _handlers.Add(PacketID.ServerMessageResponse, (json) => HandleServerMessage(JsonSerializer.Deserialize<ServerMessageResponse>(json).Message));
@@ -65,6 +69,25 @@ public class PacketHandler
         else
         {
             Console.WriteLine("정의되지 않은 패킷이 수신되었습니다.");
+        }
+    }
+
+    public void OnRecvPacketProto(_PacketID id, byte[] data)
+    {
+        switch (id)
+        {
+            case _PacketID.PlayerMoveResponseId:
+                PlayerMoveResponseProto playerMoveResponseProto = PlayerMoveResponseProto.Parser.ParseFrom(data);
+                HandlePlayerMove(playerMoveResponseProto);
+                break;
+            case _PacketID.TimeSyncResponseId:
+                TimeSyncResponseProto timeSyncResponseProto = TimeSyncResponseProto.Parser.ParseFrom(data);
+                HandleTimeSync(timeSyncResponseProto);
+                break;
+            case _PacketID.PlayerMoveListResponseId:
+                PlayerMoveListResponseProto playerMoveListResponseProto = PlayerMoveListResponseProto.Parser.ParseFrom(data);
+                HandlePlayerMoveList(playerMoveListResponseProto);
+                break;
         }
     }
 
@@ -89,7 +112,13 @@ public class PacketHandler
         OnSpawnOnePlayerResponse?.Invoke(res);
     }
 
-    public void HandlePlayerMove(PlayerMoveResponse res)
+    //proto로 넘김
+    /*public void HandlePlayerMove(PlayerMoveResponse res)
+    {
+        Managers.Map.UpdatePlayerMove(res);
+    }*/
+
+    public void HandlePlayerMove(PlayerMoveResponseProto res)
     {
         Managers.Map.UpdatePlayerMove(res);
     }
@@ -202,9 +231,20 @@ public class PacketHandler
         //Managers.Ui._dialogueUi.OnDialogueSelection(res);
     }
 
-    public void HandlePlayerMoveList(PlayerMoveListResponse res)
+    //proto로 넘김
+    /*public void HandlePlayerMoveList(PlayerMoveListResponse res)
     {
         Managers.Map.UpdatePlayerMoveList(res);
+    }*/
+
+    public void HandlePlayerMoveList(PlayerMoveListResponseProto res)
+    {
+        Managers.Map.UpdatePlayerMoveList(res);
+    }
+
+    public void HandleTimeSync(TimeSyncResponseProto res)
+    {
+        Managers.Network.ComputeRTT(res);
     }
 
     public void HandleServerMessage(string msg)

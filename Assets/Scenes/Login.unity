@@ -265,7 +265,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 943a47cc97b4c634d8bcc13264a8bbca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  host: 127.0.0.1
+  host: 3.34.185.79
   port: 7777
 --- !u!224 &47144952 stripped
 RectTransform:

@@ -247,6 +247,7 @@ public class PlayerMoveRequest : IPacket
 public class PlayerMoveResponse : IPacket
 {
     public PacketID PacketId => PacketID.PlayerMoveResponse;
+    public long Timestamp { get; set; }
     public int CharacterId { get; set; }
     public float PosX { get; set; }
     public float PosY { get; set; }

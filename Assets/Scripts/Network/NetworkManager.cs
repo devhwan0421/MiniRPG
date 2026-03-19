@@ -1,14 +1,16 @@
-using UnityEngine;
-using UnityEngine.UI;
-using System.Net.Sockets;
+using Google.Protobuf;
+using Protocol;
 using System;
-using System.Text;
 using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Collections.Generic;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class NetworkManager : MonoBehaviour
 {
@@ -30,9 +32,10 @@ public class NetworkManager : MonoBehaviour
 
     private readonly ConcurrentQueue<Action> _mainQ = new();       // 메인 스레드에서 실행할 작업 큐
 
-    //이벤트 (Unity 메인 스레드에서 호출)
-    //public event Action OnConnected;
-    //public event Action OnDisconnected;
+    private float _timer = 0f;
+    private const float _syncInterval = 5f;
+    private long _serverOffset;
+    private bool _isFirstSync = true;
 
     public PacketHandler Handler { get; set; }
 
@@ -59,6 +62,21 @@ public class NetworkManager : MonoBehaviour
     void Update()
     {
         PacketQueue.Instance.PopAll();
+
+        if (IsConnected)
+        {
+            _timer += Time.deltaTime;
+
+            if (_timer > _syncInterval)
+            {
+                //_timer = 0f;
+                _timer -= _syncInterval;
+
+                var timeSyncRequestProto = new TimeSyncRequestProto { ClientSendTime = DateTime.UtcNow.Ticks };
+                ArraySegment<byte> packet = PacketSerializer.SerializeProto((ushort)timeSyncRequestProto.PacketId, timeSyncRequestProto);
+                SendPacket(packet);
+            }
+        }
     }
 
     void EnqueueMain(Action action) => _mainQ.Enqueue(action);
@@ -89,6 +107,36 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
+    private Queue<long> _offsetHistory = new Queue<long>();
+    private const int MaxHistory = 5;
+
+    //지연시간 계산 함수
+    public void ComputeRTT(TimeSyncResponseProto res)
+    {
+        long t1 = res.ClientSendTime; //첫 전송시간
+        long tServer = res.ServerTime; //응답 서버시간
+        long t3 = DateTime.UtcNow.Ticks; //현재시간
+
+        long rtt = t3 - t1; //왕복 시간
+        long estimatedServerNow = tServer + (rtt / 2); //추정서버시간
+        long tmpOffset = estimatedServerNow - t3;
+
+        //지연 시간이 한번씩 비정상적으로 튀기 때문에 5개의 평균값을 사용
+        _offsetHistory.Enqueue(tmpOffset);
+        if (_offsetHistory.Count > MaxHistory) _offsetHistory.Dequeue();
+
+        long sum = 0;
+        foreach (var offset in _offsetHistory) sum += offset;
+
+        _serverOffset = sum / _offsetHistory.Count;
+
+        //double serverTimeSec = serverTimeTick / 10000000.0;
+        
+        //Debug.Log($"[Protobuf Sync] RTT: {rtt / 10000f}ms, Avg Offset: {_serverOffset}");
+    }
+
+    public long GetServerTime() => DateTime.UtcNow.Ticks + _serverOffset;
+
     private async Task RecvLoop(CancellationToken token)
     {
         int currentLength = 0;
@@ -99,7 +147,7 @@ public class NetworkManager : MonoBehaviour
             {
                 //_recvBuffer.Length - currentLength
                 int n = await _stream.ReadAsync(_recvBuffer, currentLength, _recvBuffer.Length - currentLength, token);
-                Debug.Log($"받은 패킷양: {n}");
+                //Debug.Log($"받은 패킷양: {n}");
                 if (n <= 0) break;
 
                 currentLength += n;
@@ -112,12 +160,23 @@ public class NetworkManager : MonoBehaviour
 
                     if (currentLength - processed < size) break;
 
-                    string json = Encoding.UTF8.GetString(_recvBuffer, processed + 4, size - 4);
+                    if(id ==12 || id == 46 || id == 901) //protoTest
+                    {
+                        //작업을 넘기는 방식으로 변경 필요
+                        int dataSize = size - 4;
+                        byte[] packetData = new byte[dataSize];
+                        Array.Copy(_recvBuffer, processed + 4, packetData, 0, dataSize);
+                        PacketQueue.Instance.Push(() => Handler.OnRecvPacketProto((_PacketID)id, packetData));
+                    }
+                    else
+                    {
+                        string json = Encoding.UTF8.GetString(_recvBuffer, processed + 4, size - 4);
 
-                    Debug.Log($"[Client] <<< Packet Received: ID={id}, Size={size}, JSON={json}");
+                        //Debug.Log($"[Client] <<< Packet Received: ID={id}, Size={size}, JSON={json}");
 
-                    //유니티 메인 스레드 큐로 넘김. 현재 update문에서 하나씩 처리중
-                    PacketQueue.Instance.Push(()=> Handler.OnRecvPacket((PacketID)id, json));
+                        //유니티 메인 스레드 큐로 넘김. 현재 update문에서 하나씩 처리중
+                        PacketQueue.Instance.Push(() => Handler.OnRecvPacket((PacketID)id, json));
+                    }
                     processed += size;
                 }
 

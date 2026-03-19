@@ -39,6 +39,13 @@ public class PlayerController : MonoBehaviour
     private bool _isAttacking = false;
     public float _attackSec = 0.5f;
 
+    private Vector3 _lastFramePos;    // 실제 속도 계산을 위한 직전 프레임 위치
+    private float _actualVelX;        // 계산된 실제 X 속도
+    private float _actualVelY;        // 계산된 실제 Y 속도
+
+    private float _stopTimer = 0f;
+    private const float STOP_DELAY = 0.1f;
+
     public void Init(PlayerInfo playerinfo, SPUM_Prefabs spum, PlayerUi playerUi)
     {
         _playerInfo = playerinfo;
@@ -68,12 +75,32 @@ public class PlayerController : MonoBehaviour
         //_indexPair = Managers.CharacterData.GetIndexPair();
     }
 
+    private void OnGUI()
+    {
+        GUI.Box(new Rect(10, 10, 200, 100), "Player Physics Info");
+        GUIStyle style = new GUIStyle { fontSize = 24 };
+        style.normal.textColor = Color.yellow;
+
+        // RB 값이 아닌 '실제 이동 속도'를 표시
+        GUI.Label(new Rect(20, 35, 180, 30), $"Actual VX: {_actualVelX:F2}", style);
+        GUI.Label(new Rect(20, 60, 180, 30), $"Actual VY: {_actualVelY:F2}", style);
+
+        bool isGrounded = groundCheck != null && groundCheck.isGrounded;
+        style.normal.textColor = isGrounded ? Color.green : Color.red;
+        GUI.Label(new Rect(20, 85, 180, 30), $"Grounded: {isGrounded}", style);
+    }
+
     private void Update()
     {
         //플레이어 Death
-        if (state == 9) {
-            return; 
-        }
+        if (state == 9) return;
+
+        /*float horizontalDelta = Mathf.Abs(transform.position.x - _lastFramePos.x);
+        float verticalDelta = Mathf.Abs(transform.position.y - _lastFramePos.y);
+        bool isActuallyMoving = (horizontalDelta > 0.0001f || verticalDelta > 0.0001f)*/;
+
+        float distanceMoved = Vector2.Distance(transform.position, _lastFramePos);
+        bool isPhysicallyMoving = distanceMoved > 0.001f;
 
         Hit();
 
@@ -86,19 +113,39 @@ public class PlayerController : MonoBehaviour
             //float vertical = Input.GetAxisRaw("Vertical");
             bool jump = Input.GetKeyDown(KeyCode.LeftAlt);
 
+            _rb.linearVelocity = new Vector2(horizontal * moveSpeed, _rb.linearVelocity.y);
+
+            _actualVelX = _rb.linearVelocity.x;
+            _actualVelY = _rb.linearVelocity.y;
+
             // 플레이어 이동 처리 로직
             if (horizontal != 0)
             {
-                Vector3 movement = new Vector3(horizontal, 0, 0).normalized;
-                transform.position += movement * moveSpeed * Time.deltaTime;
-
                 _playerInfo.PosX = transform.position.x;
                 _playerInfo.PosY = transform.position.y;
                 _playerInfo.PosZ = transform.position.z;
 
                 dir = horizontal < 0 ? -1 : 1;
-                state = 1;
-                _spum.PlayAnimation(PlayerState.MOVE, _indexPair[PlayerState.MOVE]);
+
+                if (!isPhysicallyMoving)
+                {
+                    _stopTimer += Time.deltaTime;
+                }
+                else
+                {
+                    _stopTimer = 0f;
+                }
+
+                if (_stopTimer >= STOP_DELAY)
+                {
+                    state = 0;
+                    _spum.PlayAnimation(PlayerState.IDLE, _indexPair[PlayerState.IDLE]);
+                }
+                else
+                {
+                    state = 1;
+                    _spum.PlayAnimation(PlayerState.MOVE, _indexPair[PlayerState.MOVE]);
+                }
 
                 var s = _spum.transform.localScale;
                 s.x = Mathf.Abs(s.x) * (horizontal < 0 ? 1 : -1);
@@ -117,15 +164,20 @@ public class PlayerController : MonoBehaviour
                 _rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             }
         }
+
         float distance = Vector3.Distance(_lastSentPos, transform.position);
         if (state != _lastState || (distance > 0.1f && Time.time - _lastSendTime > SEND_INTERVAL))
         {
-            var moveBuff = PacketMaker.Instance.Move(transform.position.x, transform.position.y, transform.position.z, dir, state);
+            //Debug.Log($"[send] posX: {transform.position.x}, posY: {transform.position.y}");
+            //var moveBuff = PacketMaker.Instance.Move(transform.position.x, transform.position.y, transform.position.z, dir, state);
+            var moveBuff = PacketMaker.Instance.MoveProto(transform.position.x, transform.position.y, transform.position.z, dir, state, _actualVelX, _actualVelY, Managers.Network.GetServerTime());
             Managers.Network.SendPacket(moveBuff);
             _lastSentPos = transform.position;
             _lastState = state;
             _lastSendTime = Time.time;
         }
+
+        _lastFramePos = transform.position;
     }
 
     public bool IsInvincible() => _isInvincible;
@@ -192,8 +244,9 @@ public class PlayerController : MonoBehaviour
         Debug.Log("OnDeath");
         state = 9;
         _playerInfo.Hp = 0;
+        _rb.linearVelocity = Vector3.zero;
         //_spum.PlayAnimation(PlayerState.DEATH, _indexPair[PlayerState.DEATH]);
-        var moveBuff = PacketMaker.Instance.Move(transform.position.x, transform.position.y, transform.position.z, dir, state);
+        var moveBuff = PacketMaker.Instance.MoveProto(transform.position.x, transform.position.y, transform.position.z, dir, state, 0, 0, Managers.Network.GetServerTime());
         Managers.Network.SendPacket(moveBuff);
 
         _spum.gameObject.SetActive(false);

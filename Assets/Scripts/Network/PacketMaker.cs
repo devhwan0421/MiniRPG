@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Protocol;
+using System;
 using System.Text.Json;
 
 public class PacketMaker
@@ -150,4 +151,22 @@ public class PacketMaker
         string json = JsonSerializer.Serialize(questRequest);
         return PacketSerializer.Serialize((ushort)questRequest.PacketId, json);
     }*/
+
+    public ArraySegment<byte> MoveProto(float posX, float posY, float posZ, int dir, int state, float vx, float vy, long timestamp)
+    {
+        PlayerMoveRequestProto packet = new PlayerMoveRequestProto
+        {
+            CharacterId = Managers.Object.MyPlayer.CharacterId,
+            PosX = posX,
+            PosY = posY,
+            PosZ = posZ,
+            Dir = dir,
+            State = state,
+            Vx = vx,
+            Vy = vy,
+            TimeStamp = timestamp
+        };
+
+        return PacketSerializer.SerializeProto((ushort)packet.PacketId, packet);
+    }
 }
